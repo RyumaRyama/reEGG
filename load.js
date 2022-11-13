@@ -1,7 +1,8 @@
 const glob = require('glob');
 const fs = require('fs');
 
-let keywords = [];
+const textKeywords = [];
+const emojiKeywords = [];
 const gifts = {};
 
 glob('./gift/*/', (err, directories) => {
@@ -15,7 +16,12 @@ glob('./gift/*/', (err, directories) => {
 
     const comments = setting.comments;
     delete setting.comments;
-    keywords = keywords.concat(comments);
+    comments.forEach(comment => {
+      if (comment[0] == ":" && comment.slice(-1) == ":")
+        emojiKeywords.push(comment);
+      else
+        textKeywords.push(comment);
+    });
     comments.forEach(comment => {
       gifts[comment] = {
         path: file_paths,
@@ -24,13 +30,17 @@ glob('./gift/*/', (err, directories) => {
     });
   });
 
-  console.log(gifts);
-
   // const outputJson = `
   //   const superChatList = ${JSON.stringify(superChatList)};
   //   const giftPath = JSON.parse('${JSON.stringify(giftPath)}');
+  const emojiHash = emojiKeywords.reduce((map, obj) => {
+    map[obj] = true;
+    return map;
+  }, {});
+
   const outputJson = `
-    const keyword_list = ${JSON.stringify(keywords)};
+    const textKeywords = ${JSON.stringify(textKeywords)};
+    const emojiKeywords = ${JSON.stringify(emojiHash)};
     const giftPath = JSON.parse('${JSON.stringify(gifts)}');
   `;
 
