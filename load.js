@@ -1,8 +1,11 @@
 const glob = require('glob');
 const fs = require('fs');
+const Canvas = require("canvas");
+const Image = Canvas.Image;
 
 const textKeywords = [];
 const emojiKeywords = [];
+const giftImageSize = {};
 const gifts = {};
 
 glob('./gift/*/', (err, directories) => {
@@ -12,7 +15,23 @@ glob('./gift/*/', (err, directories) => {
   }
   directories.forEach(directory => {
     const setting = require(directory + 'setting.json');
-    const file_paths = glob.sync(directory + '*.png');
+    const filePaths = glob.sync(directory + '*.png');
+
+    // 画像の縦横サイズ取得
+    filePaths.forEach(path => {
+      const element = new Image();
+
+      element.onload = () => {
+        var width = element.naturalWidth;
+        var height = element.naturalHeight;
+
+        giftImageSize[path] = {
+          width: width,
+          height: height,
+        }
+      }
+      element.src = path;
+    });
 
     const comments = setting.comments;
     delete setting.comments;
@@ -24,15 +43,12 @@ glob('./gift/*/', (err, directories) => {
     });
     comments.forEach(comment => {
       gifts[comment] = {
-        path: file_paths,
+        path: filePaths,
         ...setting
       };
     });
   });
 
-  // const outputJson = `
-  //   const superChatList = ${JSON.stringify(superChatList)};
-  //   const giftPath = JSON.parse('${JSON.stringify(giftPath)}');
   const emojiHash = emojiKeywords.reduce((map, obj) => {
     map[obj] = true;
     return map;
@@ -41,6 +57,7 @@ glob('./gift/*/', (err, directories) => {
   const outputJson = `
     const textKeywords = ${JSON.stringify(textKeywords)};
     const emojiKeywords = ${JSON.stringify(emojiHash)};
+    const giftImageSize = ${JSON.stringify(giftImageSize)};
     const giftPath = JSON.parse('${JSON.stringify(gifts)}');
   `;
 
