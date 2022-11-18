@@ -46,21 +46,57 @@ ws.onmessage = (chatItemResponse) => {
       giftObject[emoji] = 1;
   });
 
-  console.log(giftObject);
-
   // ギフトがなければ終了
   if (Object.keys(giftObject).length <= 0) return;
 
-  const hyo_comment_viewer = document.getElementById('gift-viewer');
+  // チャットに含まれていたギフトを処理
+  Object.keys(giftObject).forEach(key => {
+    // 設定された数を上限に表示
+    [...Array(Math.min(giftObject[key], giftData[key].limit))].map(() => {
+      // ギフトの設定、パス取得
+      const gift = giftData[key];
 
-  const hyo_comme = document.createElement('div');
-  const hyo_comme_p = document.createElement('p');
-  hyo_comme_p.append(...messageElement);
-  hyo_comme.appendChild(hyo_comme_p);
-  hyo_comment_viewer.appendChild(hyo_comme);
-  hyo_comme.classList.add('comment');
-  hyo_comme.style.left = '0px';
+      const path = gift.path[getRandomInt(gift.path.length)];
+      const layer = gift.layer ? gift.layer : 0;
+      const time = gift.time ? gift.time : -1;
 
-  const position = Math.floor(Math.random() * (window.innerWidth - hyo_comme.offsetWidth));
-  hyo_comme.style.left = position + 'px';
+      // サイズ情報取得
+      const width = giftImageSize[path].width;
+      const height = giftImageSize[path].height;
+
+      printGift(path, width, height, layer, time);
+    });
+  });
 };
+
+const printGift = (path, width, height, layer, time) => {
+  // ギフト要素作成
+  const gift = document.createElement('img');
+  gift.classList.add('gift');
+
+  // 同一素材で複数アニメーションを再生したいため、パスの後ろに固有の文字列を追加する。
+  const currentTime = new Date().getTime();
+  const rand = getRandomInt(10000);
+  gift.src = path + '?' + currentTime + rand;
+
+  // 表示位置設定
+  const top = (document.documentElement.clientHeight - height);
+  const left = (document.documentElement.clientWidth - width);
+  gift.style.top = getRandomInt(top + 1) + 'px';
+  gift.style.left = getRandomInt(left + 1) + 'px';
+  gift.style.zIndex = layer;
+
+  // ギフト表示
+  const gift_viewer = document.getElementById('gift-viewer');
+  gift_viewer.appendChild(gift);
+
+  // 表示時間制御
+  if (time < 0) return;
+  setTimeout(() => {
+    gift.remove();
+  }, time*1000);
+};
+
+const getRandomInt = max => {
+  return Math.floor(Math.random() * max);
+}

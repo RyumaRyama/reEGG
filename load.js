@@ -58,7 +58,7 @@ glob('./gift/*/', (err, directories) => {
     const textKeywords = ${JSON.stringify(textKeywords)};
     const emojiKeywords = ${JSON.stringify(emojiHash)};
     const giftImageSize = ${JSON.stringify(giftImageSize)};
-    const giftPath = JSON.parse('${JSON.stringify(gifts)}');
+    const giftData = JSON.parse('${JSON.stringify(gifts)}');
   `;
 
   fs.writeFile('./src/gift_path.js', outputJson, (err, data) => {
