@@ -52,7 +52,12 @@ ws.onmessage = (chatItemResponse) => {
   // チャットに含まれていたギフトを処理
   Object.keys(giftObject).forEach(key => {
     // 設定された数を上限に表示
-    [...Array(Math.min(giftObject[key], giftData[key].limit))].map(() => {
+    // 設定がなければ無限
+    let printGiftCount = giftObject[key];
+    if (giftData[key].limit !== undefined)
+        printGiftCount = Math.min(giftObject[key], giftData[key].limit);
+
+    [...Array(printGiftCount)].map(() => {
       // ギフトの設定、パス取得
       const gift = giftData[key];
 
