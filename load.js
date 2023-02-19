@@ -13,6 +13,9 @@ glob('./gift/*/', (err, directories) => {
     return;
   }
   directories.forEach(directory => {
+    // setting.jsonのないディレクトリは無視
+    if (!fs.existsSync(directory + 'setting.json')) return;
+
     const setting = require(directory + 'setting.json');
     const filePaths = glob.sync(directory + '*.png');
 
