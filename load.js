@@ -2,8 +2,8 @@ const glob = require('glob');
 const fs = require('fs');
 const sizeOf = require('image-size');
 
-const textKeywords = [];
-const emojiKeywords = [];
+const textKeywords = new Set();
+const emojiKeywords = new Set();
 const giftImageSize = {};
 const gifts = {};
 
@@ -34,9 +34,9 @@ glob('./gift/*/', (err, directories) => {
     delete setting.comments;
     comments.forEach(comment => {
       if (comment[0] == ":" && comment.slice(-1) == ":")
-        emojiKeywords.push(comment);
+        emojiKeywords.add(comment);
       else
-        textKeywords.push(comment);
+        textKeywords.add(comment);
     });
     comments.forEach(comment => {
       gifts[comment] = {
@@ -46,13 +46,13 @@ glob('./gift/*/', (err, directories) => {
     });
   });
 
-  const emojiHash = emojiKeywords.reduce((map, obj) => {
+  const emojiHash = Array.from(emojiKeywords).reduce((map, obj) => {
     map[obj] = true;
     return map;
   }, {});
 
   const outputJson = `
-    const textKeywords = ${JSON.stringify(textKeywords)};
+    const textKeywords = ${JSON.stringify(Array.from(textKeywords))};
     const emojiKeywords = ${JSON.stringify(emojiHash)};
     const giftImageSize = ${JSON.stringify(giftImageSize)};
     const giftData = JSON.parse('${JSON.stringify(gifts)}');
