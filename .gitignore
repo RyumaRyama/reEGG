@@ -1,5 +1,5 @@
 .DS_Store
 node_modules
 *.png
-*.json
+setting.json
 gift_path.js

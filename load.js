@@ -1,7 +1,6 @@
 const glob = require('glob');
 const fs = require('fs');
-const Canvas = require("canvas");
-const Image = Canvas.Image;
+const sizeOf = require('image-size');
 
 const textKeywords = [];
 const emojiKeywords = [];
@@ -19,18 +18,13 @@ glob('./gift/*/', (err, directories) => {
 
     // 画像の縦横サイズ取得
     filePaths.forEach(path => {
-      const element = new Image();
-
-      element.onload = () => {
-        var width = element.naturalWidth;
-        var height = element.naturalHeight;
-
-        giftImageSize[path] = {
-          width: width,
-          height: height,
-        }
+      const dimensions = sizeOf(path);
+      const width = dimensions.width;
+      const height = dimensions.height;
+      giftImageSize[path] = {
+        width: width,
+        height: height,
       }
-      element.src = path;
     });
 
     const comments = setting.comments;
