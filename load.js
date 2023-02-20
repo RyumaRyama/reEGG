@@ -2,6 +2,7 @@ const glob = require('glob');
 const fs = require('fs');
 const sizeOf = require('image-size');
 
+// 同じワードは重複させたくないため、setに格納する
 const textKeywords = new Set();
 const emojiKeywords = new Set();
 const giftImageSize = {};
@@ -12,6 +13,7 @@ glob('./gift/*/', (err, directories) => {
     console.log(err);
     return;
   }
+
   directories.forEach(directory => {
     // setting.jsonのないディレクトリは無視
     if (!fs.existsSync(directory + 'setting.json')) return;
@@ -39,10 +41,16 @@ glob('./gift/*/', (err, directories) => {
         textKeywords.add(comment);
     });
     comments.forEach(comment => {
-      gifts[comment] = {
-        path: filePaths,
-        ...setting
-      };
+      // 既に登録のあるワードの場合、ファイルパスの追加のみ行う
+      if (gifts[comment] === undefined) {
+        gifts[comment] = {
+          path: [...filePaths],
+          ...setting
+        };
+      }
+      else {
+        gifts[comment].path.push(...filePaths);
+      }
     });
   });
 
