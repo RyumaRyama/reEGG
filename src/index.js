@@ -53,17 +53,17 @@ ws.onmessage = (chatItemResponse) => {
   Object.keys(giftObject).forEach(key => {
     // 設定された数を上限に表示
     // 設定がなければ無限
+    const gift = parseGiftSetting(giftData[key]);
+
     let printGiftCount = giftObject[key];
     if (giftData[key].limit !== undefined)
         printGiftCount = Math.min(giftObject[key], giftData[key].limit);
 
     [...Array(printGiftCount)].map(() => {
       // ギフトの設定、パス取得
-      const gift = giftData[key];
-
       const path = gift.path[getRandomInt(gift.path.length)];
-      const layer = gift.layer ? gift.layer : 0;
-      const time = gift.time ? gift.time : -1;
+      const layer = gift.layer;
+      const time = gift.time;
 
       // サイズ情報取得
       const width = giftImageSize[path].width;
@@ -73,6 +73,22 @@ ws.onmessage = (chatItemResponse) => {
     });
   });
 };
+
+// 各種パラメータが空の場合に値を入れておく処理
+const parseGiftSetting = gift => {
+  const parsedGift = Object.assign({}, JSON.parse(JSON.stringify(gift)));
+
+  // limitがない場合、-1としていくつでも無限に表示
+  parsedGift.limit = parsedGift.limit ? parsedGift.limit : -1;
+
+  // timeがない場合、-1として無限時間表示
+  parsedGift.time = parsedGift.time ? parsedGift.time : -1;
+
+  // layerがない場合、0として標準表示
+  parsedGift.layer = parsedGift.layer ? parsedGift.layer : 0;
+
+  return parsedGift;
+}
 
 const printGift = (path, width, height, layer, time) => {
   // ギフト要素作成
