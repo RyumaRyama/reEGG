@@ -6,7 +6,9 @@ const sizeOf = require('image-size');
 const textKeywords = new Set();
 const emojiKeywords = new Set();
 const giftImageSize = {};
-const gifts = {};
+const giftSettings = {};
+const giftPaths = {};
+const giftCommentToDirectory = {};
 
 glob('./gift/*/', (err, directories) => {
   if (err) {
@@ -21,16 +23,26 @@ glob('./gift/*/', (err, directories) => {
     const setting = require(directory + 'setting.json');
     const filePaths = glob.sync(directory + '*.png');
 
-    // 画像の縦横サイズ取得
     filePaths.forEach(path => {
+      // 画像の縦横サイズ取得
       const dimensions = sizeOf(path);
       const width = dimensions.width;
       const height = dimensions.height;
       giftImageSize[path] = {
         width: width,
         height: height,
-      }
+      };
     });
+
+    // ディレクトリにあるギフト全体に対する設定
+    giftSettings[directory] = {
+      limit: setting.limit ? setting.limit : -1,
+      time: setting.time ? setting.time : -1,
+      layer: setting.layer ? setting.layer : 0,
+    };
+
+    // ディレクトリにあるギフトのpath
+    giftPaths[directory] = filePaths;
 
     const comments = setting.comments;
     delete setting.comments;
@@ -41,16 +53,11 @@ glob('./gift/*/', (err, directories) => {
         textKeywords.add(comment);
     });
     comments.forEach(comment => {
-      // 既に登録のあるワードの場合、ファイルパスの追加のみ行う
-      if (gifts[comment] === undefined) {
-        gifts[comment] = {
-          path: [...filePaths],
-          ...setting
-        };
+      if (giftCommentToDirectory[comment] === undefined) {
+        giftCommentToDirectory[comment] = [];
       }
-      else {
-        gifts[comment].path.push(...filePaths);
-      }
+
+      giftCommentToDirectory[comment].push(directory);
     });
   });
 
@@ -63,7 +70,9 @@ glob('./gift/*/', (err, directories) => {
     const textKeywords = ${JSON.stringify(Array.from(textKeywords))};
     const emojiKeywords = ${JSON.stringify(emojiHash)};
     const giftImageSize = ${JSON.stringify(giftImageSize)};
-    const giftData = JSON.parse('${JSON.stringify(gifts)}');
+    const giftSettings = ${JSON.stringify(giftSettings)};
+    const giftPaths = ${JSON.stringify(giftPaths)};
+    const giftCommentToDirectory = ${JSON.stringify(giftCommentToDirectory)};
   `;
 
   fs.writeFile('./src/gift_path.js', outputJson, (err, data) => {
