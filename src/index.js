@@ -49,46 +49,39 @@ ws.onmessage = (chatItemResponse) => {
   // ギフトがなければ終了
   if (Object.keys(giftObject).length <= 0) return;
 
+  // limitのカウントなどで設定を書き換えたいので、コピーをとる
+  const giftSettingsCopy = Object.assign({}, JSON.parse(JSON.stringify(giftSettings)));
+  const giftPathsCopy = Object.assign({}, JSON.parse(JSON.stringify(giftPaths)))
+
   // チャットに含まれていたギフトを処理
   Object.keys(giftObject).forEach(key => {
-    // 設定された数を上限に表示
-    // 設定がなければ無限
-    const gift = parseGiftSetting(giftData[key]);
+    const directories = giftCommentToDirectory[key];
 
-    let printGiftCount = giftObject[key];
-    if (giftData[key].limit !== undefined)
-        printGiftCount = Math.min(giftObject[key], giftData[key].limit);
+    for (let _i of [...Array(giftObject[key])]) {
+      // 表示できるギフトがなくなったら終了
+      if (giftPathsCopy[directory] === undefined) break;
 
-    [...Array(printGiftCount)].map(() => {
       // ギフトの設定、パス取得
-      const path = gift.path[getRandomInt(gift.path.length)];
-      const layer = gift.layer;
-      const time = gift.time;
+      const pathIndex = getRandomInt(giftPathsCopy.length);
+      const path = giftPathsCopy[pathIndex];
+      const pathPrefix = path.match(/\.\/gift\/.*\//);
+      const layer = giftSettingsCopy[pathPrefix].layer;
+      const time = giftSettingsCopy[pathPrefix].time;
 
       // サイズ情報取得
       const width = giftImageSize[path].width;
       const height = giftImageSize[path].height;
 
       printGift(path, width, height, layer, time);
-    });
+
+      // 表示したギフトはカウントダウン、0になったら表示しないものとして扱う
+      // -1設定は無限なので無視することになる
+      giftSettingsCopy[pathPrefix].limit--;
+      if (giftSettingsCopy[pathPrefix] !== 0) continue;
+      giftPathsCopy.splice(pathIndex, 1);
+    };
   });
 };
-
-// 各種パラメータが空の場合に値を入れておく処理
-const parseGiftSetting = gift => {
-  const parsedGift = Object.assign({}, JSON.parse(JSON.stringify(gift)));
-
-  // limitがない場合、-1としていくつでも無限に表示
-  parsedGift.limit = parsedGift.limit ? parsedGift.limit : -1;
-
-  // timeがない場合、-1として無限時間表示
-  parsedGift.time = parsedGift.time ? parsedGift.time : -1;
-
-  // layerがない場合、0として標準表示
-  parsedGift.layer = parsedGift.layer ? parsedGift.layer : 0;
-
-  return parsedGift;
-}
 
 const printGift = (path, width, height, layer, time) => {
   // ギフト要素作成

@@ -8,7 +8,8 @@ const emojiKeywords = new Set();
 const giftImageSize = {};
 const giftSettings = {};
 const giftPaths = {};
-const giftCommentToDirectory = {};
+const giftCommentToDirectories = {};
+const giftDirectoryToComments = {};
 
 glob('./gift/*/', (err, directories) => {
   if (err) {
@@ -53,12 +54,13 @@ glob('./gift/*/', (err, directories) => {
         textKeywords.add(comment);
     });
     comments.forEach(comment => {
-      if (giftCommentToDirectory[comment] === undefined) {
-        giftCommentToDirectory[comment] = [];
+      if (giftCommentToDirectories[comment] === undefined) {
+        giftCommentToDirectories[comment] = [];
       }
 
-      giftCommentToDirectory[comment].push(directory);
+      giftCommentToDirectories[comment].push(directory);
     });
+    giftDirectoryToComments[directory] = comments;
   });
 
   const emojiHash = Array.from(emojiKeywords).reduce((map, obj) => {
@@ -72,7 +74,8 @@ glob('./gift/*/', (err, directories) => {
     const giftImageSize = ${JSON.stringify(giftImageSize)};
     const giftSettings = ${JSON.stringify(giftSettings)};
     const giftPaths = ${JSON.stringify(giftPaths)};
-    const giftCommentToDirectory = ${JSON.stringify(giftCommentToDirectory)};
+    const giftCommentToDirectories = ${JSON.stringify(giftCommentToDirectories)};
+    const giftDirectoryToComments = ${JSON.stringify(giftDirectoryToComments)};
   `;
 
   fs.writeFile('./src/gift_path.js', outputJson, (err, data) => {
