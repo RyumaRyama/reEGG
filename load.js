@@ -24,6 +24,10 @@ glob('./gift/*/', (err, directories) => {
     const setting = require(directory + 'setting.json');
     const filePaths = glob.sync(directory + '*.png');
 
+    // ギフトがない or limit設定が0なら登録しない
+    if ( filePaths.length === 0 ) return;
+    if ( !setting.limit && setting.limit === 0 ) return;
+
     filePaths.forEach(path => {
       // 画像の縦横サイズ取得
       const dimensions = sizeOf(path);
