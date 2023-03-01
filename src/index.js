@@ -51,22 +51,26 @@ ws.onmessage = (chatItemResponse) => {
 
   // limitのカウントなどで設定を書き換えたいので、コピーをとる
   const giftSettingsCopy = Object.assign({}, JSON.parse(JSON.stringify(giftSettings)));
-  const giftPathsCopy = Object.assign({}, JSON.parse(JSON.stringify(giftPaths)))
+  // const giftPathsCopy = Object.assign({}, JSON.parse(JSON.stringify(giftPaths)));
+  const giftCommentToDirectoriesCopy = Object.assign({}, JSON.parse(JSON.stringify(giftCommentToDirectories)));
 
   // チャットに含まれていたギフトを処理
   Object.keys(giftObject).forEach(key => {
-    const directories = giftCommentToDirectory[key];
-
     for (let _i of [...Array(giftObject[key])]) {
       // 表示できるギフトがなくなったら終了
-      if (giftPathsCopy[directory] === undefined) break;
+      if (giftCommentToDirectoriesCopy[key].length === 0) break;
 
       // ギフトの設定、パス取得
-      const pathIndex = getRandomInt(giftPathsCopy.length);
-      const path = giftPathsCopy[pathIndex];
-      const pathPrefix = path.match(/\.\/gift\/.*\//);
-      const layer = giftSettingsCopy[pathPrefix].layer;
-      const time = giftSettingsCopy[pathPrefix].time;
+      // ディレクトリ取得
+      const directoryIndex = getRandomInt(giftCommentToDirectoriesCopy[key].length);
+      const directoryName = giftCommentToDirectoriesCopy[key][directoryIndex];
+
+      // PNG取得
+      const pathIndex = getRandomInt(giftPaths[directoryName].length);
+
+      const path = giftPaths[directoryName][pathIndex];
+      const layer = giftSettingsCopy[directoryName].layer;
+      const time = giftSettingsCopy[directoryName].time;
 
       // サイズ情報取得
       const width = giftImageSize[path].width;
@@ -76,9 +80,16 @@ ws.onmessage = (chatItemResponse) => {
 
       // 表示したギフトはカウントダウン、0になったら表示しないものとして扱う
       // -1設定は無限なので無視することになる
-      giftSettingsCopy[pathPrefix].limit--;
-      if (giftSettingsCopy[pathPrefix] !== 0) continue;
-      giftPathsCopy.splice(pathIndex, 1);
+      giftSettingsCopy[directoryName].limit--;
+
+      if (giftSettingsCopy[directoryName].limit !== 0) continue;
+
+      // limit === 0 で来たらランダムから外す
+      giftDirectoryToComments[directoryName].forEach(comment => {
+        giftCommentToDirectoriesCopy[comment] = giftCommentToDirectoriesCopy[comment].filter(v => {
+          return v !== directoryName;
+        });
+      });
     };
   });
 };
